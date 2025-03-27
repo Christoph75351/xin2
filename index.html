@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>我的视频站</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     body {
       -webkit-user-select: none;
@@ -156,16 +157,26 @@
       document.getElementById("totalPage").textContent = Math.ceil(filtered.length / videosPerPage);
     }
 
-    function openVideoModal(url) {
-      if (!isLoggedIn) {
-        openLoginModal();
-        return;
-      }
-      const modal = document.getElementById("videoModal");
-      const player = document.getElementById("videoPlayer");
-      player.src = url;
-      modal.classList.remove("hidden");
-    }
+function openVideoModal(url) {
+  if (!isLoggedIn) {
+    openLoginModal();
+    return;
+  }
+  const modal = document.getElementById("videoModal");
+  const player = document.getElementById("videoPlayer");
+  player.pause();
+  player.src = "";
+  modal.classList.remove("hidden");
+
+  if (Hls.isSupported() && url.endsWith(".m3u8")) {
+    const hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(player);
+  } else {
+    player.src = url;
+  }
+}
+
 
     document.getElementById("closeModal").onclick = () => {
       document.getElementById("videoModal").classList.add("hidden");
