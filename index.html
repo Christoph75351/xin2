@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的视频站</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    video::-internal-media-controls-download-button {
+      display: none;
+    }
+    video::-webkit-media-controls-enclosure {
+      overflow: hidden;
+    }
+    video::-webkit-media-controls-panel {
+      width: calc(100% + 30px);
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <!-- 导航栏 -->
+  <nav class="bg-white shadow p-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center flex-wrap">
+      <div class="text-xl font-bold">📺 我的视频站</div>
+      <button class="sm:hidden text-gray-600" onclick="toggleMenu()">☰</button>
+      <div id="navMenu" class="w-full sm:w-auto hidden sm:flex flex-col sm:flex-row gap-3 mt-2 sm:mt-0">
+        <a href="#guide" class="text-gray-700 hover:text-blue-600">观看指南</a>
+        <a href="#contact" class="text-gray-700 hover:text-blue-600">联系我们</a>
+        <div id="userInfo" class="text-gray-700 hover:text-blue-600 cursor-pointer" onclick="handleAuthClick()">登录</div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="p-4">
+    <h1 class="text-2xl font-bold mb-4">📁 视频分类</h1>
+    <div id="category-container" class="flex flex-wrap gap-2 mb-6"></div>
+    <div id="video-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+    <div class="mt-4 flex items-center justify-center gap-4">
+      <button id="prevPage" class="bg-blue-500 text-white px-4 py-2 rounded">上一页</button>
+      <span>第 <span id="currentPage">1</span> 页，共 <span id="totalPage">1</span> 页</span>
+      <button id="nextPage" class="bg-blue-500 text-white px-4 py-2 rounded">下一页</button>
+      <input id="jumpPageInput" type="number" placeholder="跳转页码" class="w-24 border px-2 py-1 rounded">
+      <button onclick="jumpToPage()" class="bg-green-500 text-white px-3 py-1 rounded">跳转</button>
+    </div>
+  </div>
+
+  <!-- 视频弹窗模态框 -->
+  <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+    <div class="bg-white p-4 rounded-lg shadow-lg w-full sm:max-w-3xl relative">
+      <button id="closeModal" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full text-lg">✖</button>
+      <video id="videoPlayer" class="w-full rounded-lg" controls></video>
+    </div>
+  </div>
+
+  <!-- 登录模态框 -->
+  <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center">
+    <div class="bg-white p-6 rounded shadow-md w-96">
+      <h2 class="text-xl font-bold mb-4">登录</h2>
+      <input id="username" type="text" placeholder="用户名" class="border px-3 py-2 w-full mb-2 rounded" />
+      <input id="password" type="password" placeholder="密码" class="border px-3 py-2 w-full mb-2 rounded" />
+      <div id="loginError" class="text-red-500 text-sm mb-2 hidden">账号或密码错误</div>
+      <div class="flex justify-between">
+        <button id="submitLogin" class="bg-blue-600 text-white px-4 py-2 rounded">登录</button>
+        <button id="closeLogin" class="bg-gray-400 text-white px-4 py-2 rounded">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let videos = [];
+    let currentCategory = "all";
+    let currentPage = 1;
+    const videosPerPage = 12;
+    let isLoggedIn = false;
+    let currentUser = "";
+    const validUser = { username: "admin", password: "123456" };
+
+    function toggleMenu() {
+      const menu = document.getElementById("navMenu");
+      menu.classList.toggle("hidden");
+    }
+
+    function updateUserInfo() {
+      const info = document.getElementById("userInfo");
+      info.textContent = isLoggedIn ? `${currentUser} | 退出` : "登录";
+    }
+
+    function handleAuthClick() {
+      if (isLoggedIn) {
+        isLoggedIn = false;
+        currentUser = "";
+        alert("已退出登录");
+        updateUserInfo();
+      } else {
+        openLoginModal();
+      }
+    }
+
+    async function loadVideos() {
+      const sources = ["videos_all.json", "videos_xuesheng.json"];
+      let all = [];
+      for (const url of sources) {
+        try {
+          const res = await fetch(url);
+          const json = await res.json();
+          all = all.concat(json);
+        } catch (e) {
+          console.warn("无法加载：" + url);
+        }
+      }
+      videos = all;
+      generateCategories();
+      renderVideos();
+    }
+
+    function generateCategories() {
+      const categoryContainer = document.getElementById('category-container');
+      categoryContainer.innerHTML = '';
+      const categories = ["全部", ...new Set(videos.map(v => v.type_name))];
+      categories.forEach(category => {
+        const btn = document.createElement('button');
+        btn.textContent = category;
+        btn.className = "category-btn px-3 py-1 bg-gray-300 rounded hover:bg-blue-500 hover:text-white";
+        btn.dataset.category = category;
+        btn.onclick = () => {
+          currentCategory = category === "全部" ? "all" : category;
+          currentPage = 1;
+          renderVideos();
+        };
+        categoryContainer.appendChild(btn);
+      });
+    }
+
+    function renderVideos() {
+      const container = document.getElementById("video-container");
+      let filtered = currentCategory === "all" ? videos : videos.filter(v => v.type_name === currentCategory);
+      const start = (currentPage - 1) * videosPerPage;
+      const end = start + videosPerPage;
+      const pageVideos = filtered.slice(start, end);
+      container.innerHTML = '';
+      pageVideos.forEach(v => {
+        const div = document.createElement("div");
+        div.className = "bg-white p-2 shadow rounded hover:shadow-lg transition cursor-pointer";
+        div.innerHTML = `<img src="${v.vod_pic}" class="w-full rounded mb-2"/><div class="text-sm">${v.vod_name}</div>`;
+        div.onclick = () => openVideoModal(v.vod_play_url);
+        container.appendChild(div);
+      });
+      document.getElementById("currentPage").textContent = currentPage;
+      document.getElementById("totalPage").textContent = Math.ceil(filtered.length / videosPerPage);
+    }
+
+    function openVideoModal(url) {
+      if (!isLoggedIn) {
+        openLoginModal();
+        return;
+      }
+      const modal = document.getElementById("videoModal");
+      const player = document.getElementById("videoPlayer");
+      player.src = url;
+      modal.classList.remove("hidden");
+    }
+
+    document.getElementById("closeModal").onclick = () => {
+      document.getElementById("videoModal").classList.add("hidden");
+      const player = document.getElementById("videoPlayer");
+      player.pause();
+      player.src = "";
+    };
+
+    document.getElementById("prevPage").onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderVideos();
+      }
+    };
+    document.getElementById("nextPage").onclick = () => {
+      let filtered = currentCategory === "all" ? videos : videos.filter(v => v.type_name === currentCategory);
+      if (currentPage * videosPerPage < filtered.length) {
+        currentPage++;
+        renderVideos();
+      }
+    };
+
+    function jumpToPage() {
+      const input = document.getElementById("jumpPageInput").value;
+      let page = parseInt(input);
+      let filtered = currentCategory === "all" ? videos : videos.filter(v => v.type_name === currentCategory);
+      const totalPages = Math.ceil(filtered.length / videosPerPage);
+      if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        renderVideos();
+      }
+    }
+
+    function openLoginModal() {
+      document.getElementById("loginModal").classList.remove("hidden");
+    }
+    function closeLoginModal() {
+      document.getElementById("loginModal").classList.add("hidden");
+    }
+    document.getElementById("closeLogin").onclick = closeLoginModal;
+    document.getElementById("submitLogin").onclick = () => {
+      const u = document.getElementById("username").value;
+      const p = document.getElementById("password").value;
+      if (u === validUser.username && p === validUser.password) {
+        isLoggedIn = true;
+        currentUser = u;
+        closeLoginModal();
+        alert("登录成功");
+        updateUserInfo();
+      } else {
+        document.getElementById("loginError").classList.remove("hidden");
+      }
+    };
+
+    // 防调试右键
+    window.addEventListener("contextmenu", e => e.preventDefault());
+    document.onkeydown = e => {
+      if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key))) {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    loadVideos();
+    updateUserInfo();
+  </script>
+</body>
+</html>
