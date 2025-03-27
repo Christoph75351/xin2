@@ -290,9 +290,12 @@ function closeVideoModal() {
       }
     };
 
-    loadVideos();
-    loadUsers();
-    updateUserInfo();
+document.addEventListener("DOMContentLoaded", () => {
+  loadVideos();
+  loadUsers();
+  updateUserInfo();
+});
+
   </script>
 </body>
 </html>
