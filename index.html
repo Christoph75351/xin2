@@ -90,7 +90,21 @@
     const videosPerPage = 12;
     let isLoggedIn = false;
     let currentUser = "";
-    const validUser = { username: "admin", password: "123456" };
+    let users = [];
+
+async function loadUsers() {
+    try {
+        const res = await fetch("users.json");
+        users = await res.json();
+    } catch (e) {
+        console.error("无法加载用户数据");
+    }
+}
+
+function validateLogin(username, password) {
+    return users.some(user => user.username === username && user.password === password);
+}
+
 
     function toggleMenu() {
       const menu = document.getElementById("navMenu");
@@ -250,18 +264,20 @@ function closeVideoModal() {
     }
     document.getElementById("closeLogin").onclick = closeLoginModal;
     document.getElementById("submitLogin").onclick = () => {
-      const u = document.getElementById("username").value;
-      const p = document.getElementById("password").value;
-      if (u === validUser.username && p === validUser.password) {
+    const u = document.getElementById("username").value;
+    const p = document.getElementById("password").value;
+
+    if (validateLogin(u, p)) {
         isLoggedIn = true;
         currentUser = u;
         closeLoginModal();
         alert("登录成功");
         updateUserInfo();
-      } else {
+    } else {
         document.getElementById("loginError").classList.remove("hidden");
-      }
-    };
+    }
+};
+
 
     // 防调试右键
     window.addEventListener("contextmenu", e => e.preventDefault());
@@ -273,6 +289,7 @@ function closeVideoModal() {
     };
 
     loadVideos();
+    loadUsers();
     updateUserInfo();
   </script>
 </body>
