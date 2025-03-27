@@ -128,23 +128,17 @@ function validateLogin(username, password) {
     }
 
 async function loadVideos() {
-  const sources = ["videos_all.json", "videos_xuesheng.json"];
-
-  // 自动添加 videos_part_1.json ~ videos_part_68.json
-  for (let i = 1; i <= 10; i++) {
-    sources.push(`videos_part_${i}.json`);
+  const url = "https://cdn.jsdelivr.net/gh/Christoph75351/xin2@main/videos.json";
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    videos = json;
+    generateCategories();
+    renderVideos();
+  } catch (e) {
+    console.warn("无法加载 JSON：" + url);
   }
-
-  let all = [];
-  for (const url of sources) {
-    try {
-      const res = await fetch(url);
-      const json = await res.json();
-      all = all.concat(json);
-    } catch (e) {
-      console.warn("无法加载：" + url);
-    }
-  }
+}
   
   videos = all;
   generateCategories();
