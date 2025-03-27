@@ -128,7 +128,7 @@ function validateLogin(username, password) {
     }
 
 async function loadVideos() {
-  const url = "https://cdn.jsdelivr.net/gh/Christoph75351/xin2@main/videos.json";
+  const url = "https://Christoph75351.github.io/xin2/videos.json";// ✅ 这是是加速 https://cdn.jsdelivr.net/gh/Christoph75351/xin2@main/videos.json
   try {
     const res = await fetch(url);
     const json = await res.json();
