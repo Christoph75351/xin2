@@ -127,22 +127,44 @@ function validateLogin(username, password) {
       }
     }
 
-    async function loadVideos() {
-      const sources = ["videos_all.json", "videos_xuesheng.json"];
-      let all = [];
-      for (const url of sources) {
-        try {
-          const res = await fetch(url);
-          const json = await res.json();
-          all = all.concat(json);
-        } catch (e) {
-          console.warn("无法加载：" + url);
-        }
-      }
-      videos = all;
-      generateCategories();
-      renderVideos();
+async function loadVideos() {
+  try {
+    // 1. 获取根目录的所有 JSON 文件列表
+    const res = await fetch("./");
+    const text = await res.text();
+
+    // 2. 解析文件名（假设服务器返回目录列表）
+    const regex = /videos_[^"]+\.json/g;
+    const sources = [...text.matchAll(regex)].map(match => match[0]);
+
+    if (sources.length === 0) {
+      console.warn("未找到任何 videos_*.json 文件");
+      return;
     }
+
+    console.log("找到 JSON 文件：", sources);
+
+    // 3. 逐个加载 JSON 文件
+    let all = [];
+    for (const url of sources) {
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        all = all.concat(json);
+      } catch (e) {
+        console.warn("无法加载：" + url);
+      }
+    }
+
+    // 4. 赋值并渲染视频
+    videos = all;
+    generateCategories();
+    renderVideos();
+  } catch (e) {
+    console.error("加载 JSON 失败：", e);
+  }
+}
+
     
     function generateCategories() {
       const categoryContainer = document.getElementById('category-container');
