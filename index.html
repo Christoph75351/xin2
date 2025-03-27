@@ -132,18 +132,15 @@ async function loadVideos() {
   try {
     const res = await fetch(url);
     const json = await res.json();
-    videos = json;
+    videos = json;  // ✅ 这里正确赋值给 videos
     generateCategories();
     renderVideos();
   } catch (e) {
     console.warn("无法加载 JSON：" + url);
   }
 }
-  
-  videos = all;
-  generateCategories();
-  renderVideos();
-}
+
+
 
     
     function generateCategories() {
