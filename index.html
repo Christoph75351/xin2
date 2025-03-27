@@ -130,6 +130,18 @@
       renderVideos();
     }
 
+    async function loadUsers() {
+    try {
+        const response = await fetch('https://raw.githubusercontent.com/Kira5309/cqcm/main/users.json');
+        if (!response.ok) throw new Error('Failed to load users');
+        users = await response.json();
+        console.log("用户数据：", users);
+    } catch (error) {
+        console.error('加载用户失败:', error);
+    }
+}
+
+    
     function generateCategories() {
       const categoryContainer = document.getElementById('category-container');
       categoryContainer.innerHTML = '';
