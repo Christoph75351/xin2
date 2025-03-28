@@ -6,23 +6,75 @@
   <title>我的视频站</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <style>
-    body {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-    video::-internal-media-controls-download-button {
-      display: none;
-    }
-    video::-webkit-media-controls-enclosure {
-      overflow: hidden;
-    }
-    video::-webkit-media-controls-panel {
-      width: calc(100% + 30px);
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  /* 保留原有功能样式 */
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  video::-internal-media-controls-download-button {
+    display: none;
+  }
+
+  video::-webkit-media-controls-enclosure {
+    overflow: hidden;
+  }
+
+  video::-webkit-media-controls-panel {
+    width: calc(100% + 30px);
+  }
+
+  /* 👇👇👇 可爱 UI 样式开始 👇👇👇 */
+  body {
+    font-family: 'Fredoka', sans-serif;
+    background: linear-gradient(to bottom right, #ffe3ec, #e0f7fa);
+  }
+
+  h1, h2, .text-xl {
+    color: #ff4081;
+    font-weight: 600;
+  }
+
+  .category-btn {
+    background-color: #fff0f5;
+    color: #ff4081;
+    border: 2px dashed #ffb6c1;
+    transition: all 0.2s ease;
+  }
+  .category-btn:hover {
+    background-color: #ff4081;
+    color: white;
+  }
+
+  #video-container > div {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 8px rgba(255, 105, 180, 0.2);
+    transition: transform 0.2s;
+  }
+  #video-container > div:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 16px rgba(255, 105, 180, 0.3);
+  }
+
+  button {
+    transition: all 0.2s ease-in-out;
+  }
+  button:hover {
+    transform: translateY(-2px);
+  }
+
+  #loginModal > div {
+    background: #fff0f5;
+    border: 3px dotted #ff80ab;
+  }
+  /* 👆👆👆 可爱 UI 样式结束 👆👆👆 */
+</style>
+
 </head>
 <body class="bg-gray-100">
 
